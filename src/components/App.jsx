@@ -1,62 +1,52 @@
 import { Component } from 'react';
-import { ThemeProvider } from 'styled-components';
-import { theme } from 'theme/theme';
+import { Button } from './Button';
+import { MoviesGallery } from './MoviesGallery';
 
-import { usersData } from '../data/usersData';
-import { Button } from './Button/Button';
-import { UsersList } from './UsersList/UsersList';
-import { Form } from './Form/Form';
-import { nanoid } from 'nanoid';
+import { fetchMovies } from 'service/api';
 
 export class App extends Component {
   state = {
-    users: usersData,
-    isListShown: false,
-    isFormShown: false,
+    movies: [],
+    isMoviesShown: false,
+    page: 1,
+    isLoading: false,
+    currentImg: null,
+    error: null,
   };
 
-  deleteUser = id => {
-    this.setState(prevState => ({
-      users: prevState.users.filter(user => id !== user.id),
-    }));
+  componentDidUpdate(_, prevState) {
+    if (
+      prevState.isMoviesShown !== this.state.isMoviesShown &&
+      this.state.isMoviesShown
+    ) {
+      fetchMovies(this.state.page).then(({ data: { results } }) =>
+        this.setState(prevState => ({
+          movies: [...prevState.movies, ...results],
+        }))
+      );
+    }
+  }
+
+  toggleVisibility = () => {
+    this.setState(prevState => ({ isMoviesShown: !prevState.isMoviesShown }));
   };
 
-  showUser = () => {
-    this.setState({ isListShown: !this.state.isListShown });
-  };
-
-  openForm = () => {
-    this.setState({ isFormShown: !this.state.isFormShown });
-  };
-
-  addUser = data => {
-    const user = {
-      id: nanoid(),
-      ...data,
-    };
-    this.setState(prevState => ({
-      users: [...prevState.users, user],
-    }));
+  openModal = img => {
+    this.setState({ currentImg: img });
   };
 
   render() {
-    const { users, isListShown, isFormShown } = this.state;
-
+    const { isMoviesShown, movies } = this.state;
     return (
-      <ThemeProvider theme={theme}>
-        {isListShown ? (
-          <UsersList
-            users={users}
-            deleteUser={this.deleteUser}
-            openForm={this.openForm}
-          />
-        ) : (
-          <Button text="Show users" clickHandler={this.showUser} />
+      <>
+        <Button
+          clickHandler={this.toggleVisibility}
+          text={!isMoviesShown ? 'Show movies' : 'Hide movies'}
+        />
+        {movies.length > 0 && (
+          <MoviesGallery movies={movies} movieModal={this.openModal} />
         )}
-        {isFormShown && (
-          <Form addUser={this.addUser} openForm={this.openForm} />
-        )}
-      </ThemeProvider>
+      </>
     );
   }
 }
