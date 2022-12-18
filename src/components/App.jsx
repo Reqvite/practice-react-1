@@ -3,6 +3,7 @@ import { Button } from './Button';
 import { MoviesGallery } from './MoviesGallery';
 
 import { fetchMovies } from 'service/api';
+import { Modal } from './Modal/Modal';
 
 export class App extends Component {
   state = {
@@ -29,14 +30,20 @@ export class App extends Component {
 
   toggleVisibility = () => {
     this.setState(prevState => ({ isMoviesShown: !prevState.isMoviesShown }));
+    if (this.state.isMoviesShown) {
+      this.setState({ movies: [] });
+    }
   };
 
   openModal = img => {
     this.setState({ currentImg: img });
   };
+  closeModal = () => {
+    this.setState({ currentImg: null });
+  };
 
   render() {
-    const { isMoviesShown, movies } = this.state;
+    const { isMoviesShown, movies, currentImg } = this.state;
     return (
       <>
         <Button
@@ -45,6 +52,9 @@ export class App extends Component {
         />
         {movies.length > 0 && (
           <MoviesGallery movies={movies} movieModal={this.openModal} />
+        )}
+        {currentImg && (
+          <Modal image={currentImg} closeModal={this.closeModal} />
         )}
       </>
     );
